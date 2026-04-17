@@ -1,0 +1,31 @@
+services:
+  galaxy-harvester-bot:
+    build: .
+    container_name: galaxy_harvester_bot
+    restart: unless-stopped
+
+    # All configuration via environment variables.
+    # You can also move these into a .env file and Docker Compose will
+    # pick them up automatically (see .env.example).
+    environment:
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - GALAXY_ID=${GALAXY_ID:-68}
+      - GALAXY_NAME=${GALAXY_NAME:-SWG Infinity}
+      - FEED_URL=${FEED_URL:-https://feeds.feedburner.com/GalaxyHarvesterResourceActivity}
+      - POLL_INTERVAL=${POLL_INTERVAL:-300}
+      - STATE_FILE=/data/gh_state.json
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    # Persist the state file across container restarts
+    volumes:
+      - gh_state:/data
+
+    # Health: just make sure the process is alive
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "galaxy_harvester_bot.py"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  gh_state:
