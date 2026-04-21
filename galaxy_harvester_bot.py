@@ -138,12 +138,14 @@ def fetch_feed(url: str) -> str | None:
 def parse_stats(encoded_html: str) -> dict:
     """Extract stat key/value pairs from <content:encoded> HTML fragment."""
     stats = {}
+    qualities = {}
     # Match patterns like "OQ: 947 (95%)" or "DR: 456 (46%)"
-    for match in re.finditer(r'\b([A-Z]{2}):\s*(\d+)\s*\(\d+%\)', encoded_html):
-        key, value = match.group(1), int(match.group(2))
+    for match in re.finditer(r'\b([A-Z]{2}):\s*(\d+)\s*\((\d+)%\)', encoded_html):
+        key, value, quality = match.group(1), int(match.group(2)), int(match.group(3))
         if key in STAT_LABELS:
             stats[key] = value
-    return stats
+            qualities[key] = quality
+    return stats, qualities
 
 
 def guess_group_from_type(type_name: str) -> str:
@@ -239,8 +241,9 @@ def parse_feed_items(xml_text: str, galaxy_id: str) -> dict:
         # Stats from <content:encoded>
         encoded_el = item.find("content:encoded", ns)
         stats = {}
+        quality = {}
         if encoded_el is not None and encoded_el.text:
-            stats = parse_stats(encoded_el.text)
+            stats, quality = parse_stats(encoded_el.text)
 
         pub_date = ""
         pub_el = item.find("pubDate")
@@ -257,6 +260,7 @@ def parse_feed_items(xml_text: str, galaxy_id: str) -> dict:
             "link":          link,
             "pub_date":      pub_date,
             "stats":         stats,
+            "quality":       quality,
         }
 
     return resources
@@ -284,6 +288,7 @@ def build_embed(resource: dict, galaxy_name: str) -> dict:
     group  = resource.get("group", "")
     color  = GROUP_COLORS.get(group, DEFAULT_COLOR)
     stats  = resource.get("stats", {})
+    quality = resource.get("quality", {})
     rtype  = resource.get("resource_type", "Unknown Type")
     name   = resource.get("name", "unknown")
     link   = resource.get("link", "")
@@ -294,11 +299,10 @@ def build_embed(resource: dict, galaxy_name: str) -> dict:
     fields = []
     for key in STAT_KEYS:
         if key in stats:
-            pct = round(stats[key] / 10)  # 0-1000 → 0-100%
-            bar = build_bar(pct)
+            bar = build_bar(quality[key])
             fields.append({
                 "name":   f"{STAT_LABELS[key]} ({key})",
-                "value":  f"`{bar}` {stats[key]} ({pct}%)",
+                "value":  f"`{bar}` {stats[key]} ({quality[key]}%)",
                 "inline": False,
             })
 
