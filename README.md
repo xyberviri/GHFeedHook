@@ -1,5 +1,6 @@
 # GHFeedHook
 This script reads the output from feedburner and sends a discord webhook if there is a update.
+![example](example.png)
 
 ## 1. Clone the repo to your host
 `git clone https://github.com/xyberviri/GHFeedHook/`
