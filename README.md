@@ -1,6 +1,8 @@
 # GHFeedHook
 This script reads the output from feedburner and sends a discord webhook if there is a update.
 
+Name of resources functions as a link back to Galaxy Harvester. 
+
 Requires Docker
 
 ![example](example.png)
