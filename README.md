@@ -1,5 +1,8 @@
 # GHFeedHook
 This script reads the output from feedburner and sends a discord webhook if there is a update.
+
+Requires Docker
+
 ![example](example.png)
 
 ## 1. Clone the repo to your host
